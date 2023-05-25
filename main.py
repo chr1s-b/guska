@@ -33,6 +33,7 @@ class MyWindow(QMainWindow):
         self.goose.paint(painter)
 
         painter.end()
+        self.update()
 
 
 if __name__ == "__main__":
