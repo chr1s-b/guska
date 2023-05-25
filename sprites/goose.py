@@ -1,8 +1,9 @@
 '''The main character.'''
 from .sprite import Sprite
-from numpy import sin, cos, pi
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt
+from numpy import pi
 from PyQt6.QtGui import QPen, QColor
+from .skeleton import Bone, Skeleton
 
 
 class Goose(Sprite):
@@ -14,27 +15,19 @@ class Goose(Sprite):
         self.feet_col = '#f3a200'
 
         # duck dimensions
+        self.x = 100
+        self.y = 200
         self.body_width = 40
-        self.body_length = 40
-        self.body_orientation = 8*pi/6
-        self.body_x = 100
-        self.body_y = 100
 
         self.head_width = 20
-        self.head_length = 10
-        self.head_orientation = 17*pi/12
-        self.neck_orientation = -pi/5
-        self.neck_stretch = 30
         self.neck_width = self.head_width * 0.95
 
         self.eye_radius = 3
-        self.forehead_size = self.head_length * 0.6
         self.eye_wonkiness = -pi/18  # small angle
         self.eye_distance = self.head_width * 0.9
 
         self.chin_size = 0.3
         self.beak_width = self.head_width*0.6
-        self.beak_length = self.head_length * 0.5
 
         self.foot_width = 6
         self.leg_length = self.body_width * 0.6
@@ -42,65 +35,71 @@ class Goose(Sprite):
         self.foot_left_height = self.leg_length
         self.foot_right_offset = -self.foot_width * 2
         self.foot_right_height = self.leg_length
+
+        self.build()
         return
 
+    def build(self):
+        """Build a skeleton."""
+        self.skeleton = Skeleton()
+        self.upper_body = Bone(40 / 2., 0.)
+        self.lower_body = Bone(self.upper_body.orientation / 2.,
+                               self.upper_body.orientation + pi)
+        self.neck = Bone(30., pi / 2.)
+        self.head = Bone(10., 0.)
+        self.feet = Bone(self.body_width * .6,
+                         self.upper_body.orientation + pi/4.)
+
+        # forehead attaching to end of head is jank
+        # TODO: fix jank
+        self.forehead = Bone(self.head.length * .8, -self.head.orientation)
+        self.left_eye = Bone(self.eye_distance / 2.,
+                             self.head.orientation + pi/2. + self.eye_wonkiness)
+        self.right_eye = Bone(self.eye_distance / 2.,
+                              self.head.orientation - pi/2. - self.eye_wonkiness)
+
+        self.chin = Bone(self.head.length * .3, self.head.orientation + pi)
+        self.beak = Bone(self.head.length * .5, self.head.orientation)
+
+        self.skeleton.attach(self.lower_body)
+        self.skeleton.attach(self.upper_body)
+        self.skeleton.attach(self.feet)
+        self.upper_body.attach(self.neck)
+        self.neck.attach(self.head)
+        self.head.attach(self.forehead)
+        self.forehead.attach(self.left_eye)
+        self.forehead.attach(self.right_eye)
+        self.head.attach(self.chin)
+        self.chin.attach(self.beak)
+
     def update(self):
-        # calculate coordinates
-        self.body_bottom = QPoint(int(self.body_x - sin(self.body_orientation)*self.body_length/2),
-                                  int(self.body_y + cos(self.body_orientation)*self.body_length/2))
-
-        self.body_top = QPoint(int(self.body_x + sin(self.body_orientation)*self.body_length/2),
-                               int(self.body_y - cos(self.body_orientation)*self.body_length/2))
-
-        head_x = int(self.body_top.x() + self.neck_stretch * sin(self.neck_orientation))
-        head_y = int(self.body_top.y() - self.neck_stretch * cos(self.neck_orientation))
-
-        self.head_top = QPoint(head_x, head_y)
-        self.head_bottom = QPoint(int(head_x + self.head_length * sin(self.head_orientation)),
-                                  int(head_y - self.head_length * cos(self.head_orientation)))
-
-        eye_centre_x = head_x + self.forehead_size * sin(self.head_orientation)
-        eye_centre_y = head_y - self.forehead_size * cos(self.head_orientation)
-
-        self.left_eye = QPoint(int(eye_centre_x + self.eye_distance / 2 * cos(self.head_orientation + self.eye_wonkiness)),
-                               int(eye_centre_y + self.eye_distance / 2 * sin(self.head_orientation + self.eye_wonkiness)))
-
-        self.right_eye = QPoint(int(eye_centre_x - self.eye_distance / 2 * cos(self.head_orientation + self.eye_wonkiness)),
-                                int(eye_centre_y - self.eye_distance / 2 * sin(self.head_orientation + self.eye_wonkiness)))
-
-        self.beak_start = self.head_bottom - (self.head_top - self.head_bottom)*self.chin_size
-        self.beak_end = QPoint(int(self.beak_start.x() + self.beak_length * sin(self.head_orientation)),
-                               int(self.beak_start.y() - self.beak_length * cos(self.head_orientation)))
-
-        self.left_foot = QPoint(int(self.body_x - self.foot_left_height * cos(self.body_orientation) + self.foot_left_offset * sin(self.body_orientation)),
-                                int(self.body_y - self.foot_left_height * sin(self.body_orientation) - self.foot_left_offset * cos(self.body_orientation)))
-        self.right_foot = QPoint(int(self.body_x - self.foot_right_height * cos(self.body_orientation) + self.foot_right_offset * sin(self.body_orientation)),
-                                 int(self.body_y - self.foot_right_height * sin(self.body_orientation) - self.foot_right_offset * cos(self.body_orientation)))
+        self.head.rotate(0.001)
+        return
 
     def paint(self, painter):
+        painter.translate(self.x, self.y)
+
         # Draw the duck body
         pen = QPen()
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+
         pen.setWidth(self.body_width)
         pen.setColor(QColor(self.body_col))
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
-        painter.drawLine(self.body_bottom, self.body_top)
+        painter.drawLine(self.lower_body.QPoint, self.upper_body.QPoint)
 
         # Draw the duck neck
-        pen = QPen()
         pen.setWidth(int(self.neck_width))
-        pen.setColor(QColor(self.body_col))
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setColor(QColor(self.beak_col))
         painter.setPen(pen)
-        painter.drawLine(self.body_top, self.head_top)
+        painter.drawLine(self.upper_body.QPoint, self.neck.QPoint)
 
         # Draw the duck head
-        pen = QPen()
         pen.setWidth(self.head_width)
         pen.setColor(QColor(self.body_col))
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
-        painter.drawLine(self.head_top, self.head_bottom)
+        painter.drawLine(self.neck.QPoint, self.head.QPoint)
 
         # Draw the duck eyes
         pen = QPen()
@@ -108,7 +107,7 @@ class Goose(Sprite):
         pen.setColor(QColor(self.eyes_col))
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
-        painter.drawPoints(self.left_eye, self.right_eye)
+        painter.drawPoints(self.left_eye.QPoint, self.right_eye.QPoint)
 
         # Draw the duck beak
         pen = QPen()
@@ -116,8 +115,8 @@ class Goose(Sprite):
         pen.setColor(QColor(self.beak_col))
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
-        painter.drawLine(self.beak_start, self.beak_end)
-
+        painter.drawLine(self.chin.QPoint, self.beak.QPoint)
+        """
         # Draw the duck feet
         pen = QPen()
         pen.setWidth(int(self.foot_width))
@@ -125,3 +124,4 @@ class Goose(Sprite):
         pen.setCapStyle(Qt.PenCapStyle.SquareCap)
         painter.setPen(pen)
         painter.drawPoints(self.left_foot, self.right_foot)
+        """

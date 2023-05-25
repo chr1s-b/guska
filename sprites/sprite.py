@@ -3,14 +3,17 @@ from abc import ABC, abstractmethod
 
 
 class Sprite(ABC):
-    def __init__(self):
+    @abstractmethod
+    def build(self):
+        """Create a Skeleton."""
         return
 
     @abstractmethod
     def update(self):
-        """ Update position. """
+        """Update position."""
         pass
 
     @abstractmethod
     def paint(self):
+        """Draw Sprite."""
         pass
