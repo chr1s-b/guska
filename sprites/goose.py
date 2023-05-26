@@ -1,9 +1,10 @@
 '''The main character.'''
 from .sprite import Sprite
 from PyQt6.QtCore import Qt
-from numpy import pi
+from numpy import pi, array
 from PyQt6.QtGui import QPen, QColor
 from .skeleton import Bone, Skeleton
+from .utils import toQPoint
 
 
 class Goose(Sprite):
@@ -30,13 +31,9 @@ class Goose(Sprite):
         self.beak_width = self.head_width*0.6
 
         self.foot_width = 6
-        self.leg_length = self.body_width * 0.6
-        self.foot_left_offset = 0
-        self.foot_left_height = self.leg_length
-        self.foot_right_offset = -self.foot_width * 2
-        self.foot_right_height = self.leg_length
 
         self.build()
+        self.update()
         return
 
     def build(self):
@@ -48,7 +45,7 @@ class Goose(Sprite):
         self.neck = Bone(30., pi / 2.)
         self.head = Bone(10., 0.)
         self.feet = Bone(self.body_width * .6,
-                         self.upper_body.orientation + pi/4.)
+                         self.upper_body.orientation - pi/4.)
 
         # forehead attaching to end of head is jank
         # TODO: fix jank
@@ -74,16 +71,20 @@ class Goose(Sprite):
 
     def update(self):
         self.head.rotate(0.001)
+
+        # calculate feet positions
+        foot_offset = array([5, 0])
+        self.left_foot = self.feet.position - foot_offset
+        self.right_foot = self.feet.position + foot_offset
         return
 
     def paint(self, painter):
         painter.translate(self.x, self.y)
+        pen = QPen()
 
         # Draw the duck body
-        pen = QPen()
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
-
         pen.setWidth(self.body_width)
         pen.setColor(QColor(self.body_col))
         painter.setPen(pen)
@@ -91,7 +92,7 @@ class Goose(Sprite):
 
         # Draw the duck neck
         pen.setWidth(int(self.neck_width))
-        pen.setColor(QColor(self.beak_col))
+        pen.setColor(QColor(self.body_col))
         painter.setPen(pen)
         painter.drawLine(self.upper_body.QPoint, self.neck.QPoint)
 
@@ -102,7 +103,6 @@ class Goose(Sprite):
         painter.drawLine(self.neck.QPoint, self.head.QPoint)
 
         # Draw the duck eyes
-        pen = QPen()
         pen.setWidth(int(self.eye_radius*2))
         pen.setColor(QColor(self.eyes_col))
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
@@ -110,18 +110,15 @@ class Goose(Sprite):
         painter.drawPoints(self.left_eye.QPoint, self.right_eye.QPoint)
 
         # Draw the duck beak
-        pen = QPen()
         pen.setWidth(int(self.beak_width))
         pen.setColor(QColor(self.beak_col))
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
         painter.drawLine(self.chin.QPoint, self.beak.QPoint)
-        """
+
         # Draw the duck feet
-        pen = QPen()
         pen.setWidth(int(self.foot_width))
         pen.setColor(QColor(self.feet_col))
         pen.setCapStyle(Qt.PenCapStyle.SquareCap)
         painter.setPen(pen)
-        painter.drawPoints(self.left_foot, self.right_foot)
-        """
+        painter.drawPoints(toQPoint(self.left_foot), toQPoint(self.right_foot))

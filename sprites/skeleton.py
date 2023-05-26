@@ -1,6 +1,6 @@
 """Skeleton acts as a rig base for a Sprite."""
 from numpy import pi, sin, cos, array
-from PyQt6.QtCore import QPoint
+from .utils import toQPoint
 
 
 class Bone:
@@ -41,7 +41,7 @@ class Bone:
     @property
     def QPoint(self):
         """Return position as QPoint."""
-        return QPoint(*map(int, self.position))
+        return toQPoint(self.position)
 
 
 class Skeleton:
