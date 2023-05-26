@@ -2,9 +2,7 @@
 from .sprite import Sprite
 from PyQt6.QtCore import Qt
 from numpy import pi, array
-from PyQt6.QtGui import QPen, QColor
 from .skeleton import Bone, Skeleton
-from .utils import toQPoint
 
 
 class Goose(Sprite):
@@ -80,45 +78,29 @@ class Goose(Sprite):
 
     def paint(self, painter):
         painter.translate(self.x, self.y)
-        pen = QPen()
 
         # Draw the duck body
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-        painter.setPen(pen)
-        pen.setWidth(self.body_width)
-        pen.setColor(QColor(self.body_col))
-        painter.setPen(pen)
-        painter.drawLine(self.lower_body.QPoint, self.upper_body.QPoint)
+        painter.setPen(width=self.body_width, color=self.body_col,
+                       capStyle=Qt.PenCapStyle.RoundCap)
+        painter.drawLine(self.lower_body.position, self.upper_body.position)
 
         # Draw the duck neck
-        pen.setWidth(int(self.neck_width))
-        pen.setColor(QColor(self.body_col))
-        painter.setPen(pen)
-        painter.drawLine(self.upper_body.QPoint, self.neck.QPoint)
+        painter.setPen(width=int(self.neck_width))
+        painter.drawLine(self.upper_body.position, self.neck.position)
 
         # Draw the duck head
-        pen.setWidth(self.head_width)
-        pen.setColor(QColor(self.body_col))
-        painter.setPen(pen)
-        painter.drawLine(self.neck.QPoint, self.head.QPoint)
+        painter.setPen(width=self.head_width)
+        painter.drawLine(self.neck.position, self.head.position)
 
         # Draw the duck eyes
-        pen.setWidth(int(self.eye_radius*2))
-        pen.setColor(QColor(self.eyes_col))
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-        painter.setPen(pen)
-        painter.drawPoints(self.left_eye.QPoint, self.right_eye.QPoint)
+        painter.setPen(width=int(self.eye_radius*2), color=self.eyes_col)
+        painter.drawPoints(self.left_eye.position, self.right_eye.position)
 
         # Draw the duck beak
-        pen.setWidth(int(self.beak_width))
-        pen.setColor(QColor(self.beak_col))
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-        painter.setPen(pen)
-        painter.drawLine(self.chin.QPoint, self.beak.QPoint)
+        painter.setPen(width=int(self.beak_width), color=self.beak_col)
+        painter.drawLine(self.chin.position, self.beak.position)
 
         # Draw the duck feet
-        pen.setWidth(int(self.foot_width))
-        pen.setColor(QColor(self.feet_col))
-        pen.setCapStyle(Qt.PenCapStyle.SquareCap)
-        painter.setPen(pen)
-        painter.drawPoints(toQPoint(self.left_foot), toQPoint(self.right_foot))
+        painter.setPen(width=self.foot_width, color=self.feet_col,
+                       capStyle=Qt.PenCapStyle.SquareCap)
+        painter.drawPoints(self.left_foot, self.right_foot)

@@ -1,6 +1,5 @@
 """Skeleton acts as a rig base for a Sprite."""
 from numpy import pi, sin, cos, array
-from .utils import toQPoint
 
 
 class Bone:
@@ -37,11 +36,6 @@ class Bone:
         """Gets position of the end of the bone."""
         # using -sin because positive angle should correspond to up on screen
         return self.parent.position + self.length * array([cos(self.orientation), -sin(self.orientation)]) # noqa E501
-
-    @property
-    def QPoint(self):
-        """Return position as QPoint."""
-        return toQPoint(self.position)
 
 
 class Skeleton:

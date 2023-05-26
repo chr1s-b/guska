@@ -1,9 +1,9 @@
 import sys
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.QtGui import QPainter
 
 import sprites
+from painter import Painter
 
 TITLE = "guska"
 WIDTH = 640
@@ -26,8 +26,7 @@ class MyWindow(QMainWindow):
         return
 
     def paintEvent(self, qpaint_event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter = Painter(self)
 
         self.goose.update()
         self.goose.paint(painter)
